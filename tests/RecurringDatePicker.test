@@ -1,0 +1,146 @@
+import React from 'react';
+import RecurrenceOptions from './RecurrenceOptions';
+import CustomRecurrence from './CustomRecurrence';
+import DateRangePicker from './DateRangePicker';
+import CalendarPreview from './CalendarPreview';
+// TODO: Implement useRecurrenceStore or import from the correct path.
+// import { useRecurrenceStore } from '../store/recurrenceStore';
+const useRecurrenceStore = () => {
+    // Temporary mock implementation for development/testing.
+    // Replace with actual store logic.
+    const [recurrenceType, setRecurrenceType] = React.useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
+    const [customFrequency, setCustomFrequency] = React.useState<number>(1);
+    const [customUnit, setCustomUnit] = React.useState<'day' | 'week' | 'month'>('day');
+    const [startDate, setStartDate] = React.useState<Date | null>(null);
+    const [endDate, setEndDate] = React.useState<Date | null>(null);
+    const [daysOfWeek, setDaysOfWeek] = React.useState<number[]>([]);
+    const [pattern, setPattern] = React.useState<any>(null);
+
+    return {
+        recurrenceType,
+        setRecurrenceType,
+        customFrequency,
+        setCustomFrequency,
+        customUnit,
+        setCustomUnit,
+        startDate,
+        setStartDate,
+        endDate,
+        setEndDate,
+        daysOfWeek,
+        setDaysOfWeek,
+        pattern,
+        setPattern,
+    };
+};
+// TODO: Implement or import getRecurringDates from the correct path.
+// import { getRecurringDates } from '../utils/recurrenceUtils';
+const getRecurringDates = ({
+    recurrenceType,
+    customFrequency,
+    customUnit,
+    startDate,
+    endDate,
+    daysOfWeek,
+    pattern,
+}: any): Date[] => {
+    // Temporary mock implementation for development/testing.
+    // Replace with actual recurrence calculation logic.
+    if (!startDate || !endDate) return [];
+    const dates: Date[] = [];
+    let current = new Date(startDate);
+    while (current <= endDate) {
+        dates.push(new Date(current));
+        if (recurrenceType === 'daily') {
+            current.setDate(current.getDate() + 1);
+        } else if (recurrenceType === 'weekly') {
+            current.setDate(current.getDate() + 7);
+        } else if (recurrenceType === 'monthly') {
+            current.setMonth(current.getMonth() + 1);
+        } else if (recurrenceType === 'custom') {
+            if (customUnit === 'day') {
+                current.setDate(current.getDate() + customFrequency);
+            } else if (customUnit === 'week') {
+                current.setDate(current.getDate() + 7 * customFrequency);
+            } else if (customUnit === 'month') {
+                current.setMonth(current.getMonth() + customFrequency);
+            }
+        } else {
+            break;
+        }
+    }
+    return dates;
+};
+
+const RecurringDatePicker: React.FC = () => {
+  const {
+    recurrenceType,
+    setRecurrenceType,
+    customFrequency,
+    setCustomFrequency,
+    customUnit,
+    setCustomUnit,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    daysOfWeek,
+    setDaysOfWeek,
+    pattern,
+    setPattern,
+  } = useRecurrenceStore();
+
+  const dates = getRecurringDates({
+    recurrenceType,
+    customFrequency,
+    customUnit,
+    startDate,
+    endDate,
+    daysOfWeek,
+    pattern,
+  });
+
+  return (
+    <div className="p-4 border rounded max-w-md mx-auto bg-white shadow">
+      <RecurrenceOptions
+        value={recurrenceType}
+        onChange={(value: string) => {
+          // Ensure only valid recurrence types are set
+          if (
+            value === 'daily' ||
+            value === 'weekly' ||
+            value === 'monthly' ||
+            value === 'custom'
+          ) {
+            setRecurrenceType(value);
+          }
+        }}
+      />
+      {recurrenceType === 'custom' && (
+        <CustomRecurrence
+          frequency={customFrequency}
+          unit={customUnit}
+          onFrequencyChange={setCustomFrequency}
+          onUnitChange={(u: string) => {
+            if (u === 'day' || u === 'week' || u === 'month') {
+              setCustomUnit(u);
+            }
+          }}
+        />
+      )}
+      <DateRangePicker
+        startDate={startDate ? startDate.toISOString().substring(0, 10) : ''}
+        endDate={endDate ? endDate.toISOString().substring(0, 10) : ''}
+        onStartDateChange={(dateStr: string) => {
+          setStartDate(dateStr ? new Date(dateStr) : null);
+        }}
+        onEndDateChange={(dateStr: string) => {
+          setEndDate(dateStr ? new Date(dateStr) : null);
+        }}
+      />
+      <CalendarPreview dates={dates.map(date => date.toISOString())} />
+    </div>
+  );
+};
+
+export default RecurringDatePicker;
